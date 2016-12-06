@@ -1,8 +1,9 @@
 #!/usr/bin/env python      
 
-########## ver 0.1
+########## ver 0.2
 #
 # 0.1 first init
+# 0.2 add async - PARTIAL
 #
 
 import argparse, os, logging, re
@@ -12,49 +13,81 @@ from socket import socket, AF_INET, SOCK_DGRAM
 
 import asyncore
 
-def snmpwalk(dst, oid="1", community="public"):
-    
-    start_oid = oid
-    #print start_oid
-    print 
-    try:
-        while 1:
-            if start_oid not in oid:
-                break
+class packet(asyncore.file_dispatcher):
 
-            #print oid
-            s = socket(AF_INET, SOCK_DGRAM)
-            s.connect((dst, 161))
+    dst = str()
+    comm = str()
+    oid = str()
 
-            snmp = SNMP(community=community,PDU=SNMPnext(varbindlist=[SNMPvarbind(oid=oid)]))
+    response = str()
 
-            buf = str( snmp )
-            while buf:
-                bytes = s.send( buf )
-                buf = buf[bytes:]
+    def __init__(self, dst, comm, oid, debug = False):
+        asyncore.dispatcher.__init__(self)
 
+        self.dst = dst
+        self.comm = comm
+        self.oid = oid
+        self.debug = debug
 
-            r = SNMP( s.recv(4096) )      
+        self.snmpwalk()
 
-            print dst, '[', community, ']',
-            print r[SNMPvarbind].oid.val, '-', r[SNMPvarbind].value.val
-
-            if ICMP in r:
-                print repr(r)
-                break
-            if r is None:
-                print "No answers"
-                break
-            #print "%-40s: %r" % (r[SNMPvarbind].oid.val,r[SNMPvarbind].value.val)
-            oid = r[SNMPvarbind].oid.val
-            #print oid
-            #print '==============='
-
-            
-    except KeyboardInterrupt:
+    def handle_read(self):
         pass
 
-    print '==============='
+    def writable(self):
+        return False
+
+    def handle_connect(self):
+        pass
+
+    def handle_close(self):
+        self.close()
+
+    def handle_expt(self):
+        self.close()
+
+    def snmpwalk(self):
+        
+        start_oid = self.oid
+        #print start_oid
+        print 
+        try:
+            while 1:
+                if start_oid not in self.oid:
+                    break
+
+                #print oid
+                s = socket(AF_INET, SOCK_DGRAM)
+                s.connect((self.dst, 161))
+
+                snmp = SNMP(community=self.comm,PDU=SNMPnext(varbindlist=[SNMPvarbind(oid=self.oid)]))
+
+                buf = str( snmp )
+                while buf:
+                    bytes = s.send( buf )
+                    buf = buf[bytes:]
+
+                response = SNMP( s.recv(4096) )
+
+                print self.dst, '[', self.comm, ']',
+                print response[SNMPvarbind].oid.val, '-', response[SNMPvarbind].value.val
+
+                if ICMP in response:
+                    print repr(response)
+                    break
+                if response is None:
+                    print "No answers"
+                    break
+                #print "%-40s: %r" % (r[SNMPvarbind].oid.val,r[SNMPvarbind].value.val)
+                self.oid = response[SNMPvarbind].oid.val
+                #print oid
+                #print '==============='
+
+                
+        except KeyboardInterrupt:
+            pass
+
+        print '==============='
 
 def main():
 
@@ -87,16 +120,18 @@ def main():
     oids["ipAdEntIfIndex"] = "1.3.6.1.2.1.4.20.1.2"
     oids["ipAdEntNetMask"] = "1.3.6.1.2.1.4.20.1.3"
 
-    # oids["ospfIfMetricIpAddress"] = "1.3.6.1.2.1.14.8.1.1"
-    # oids["ospfIfMetricValue"] = "1.3.6.1.2.1.14.8.1.4"
+    oids["ospfIfMetricIpAddress"] = "1.3.6.1.2.1.14.8.1.1"
+    oids["ospfIfMetricValue"] = "1.3.6.1.2.1.14.8.1.4"
 
-    # oids["sysName"] = "1.3.6.1.2.1.1.5"
+    oids["sysName"] = "1.3.6.1.2.1.1.5"
 
     for destination in destinations:
         for oid_key, oid_val in oids.items():
             print oid_key, oid_val
-            snmpwalk(destination, oid_val, community)
-    
+            # snmpwalk(destination, oid_val, community)
+            p = packet( destination, community, oid_val )
+
+    asyncore.loop()
 
 
 if __name__ == '__main__':

@@ -1,110 +1,19 @@
 #!/usr/bin/env python      
 
-########## ver 0.3
+########## ver 0.32
 #
 # 0.1 first init
 # 0.2 add async - PARTIAL
 # 0.3 asyncore for snmpGET and snmpwalk for snmpNEXT
+# 0.31 create obj for walk
+# 0.32 mv objs to lib
 #
 
 import argparse, os, logging, re
-from scapy.all import *
 
-from socket import socket, AF_INET, SOCK_DGRAM
+from libSnmp import snmp_packets, snmp_packet
 
 import asyncore
-
-class packet(asyncore.file_dispatcher):
-
-    dst = str()
-    comm = str()
-    oid = str()
-
-    def __init__(self, dst, comm, oid, debug):
-        asyncore.dispatcher.__init__(self)
-
-        self.dst = dst
-        self.comm = comm
-        self.oid = oid
-        self.debug = debug
-
-        self.create_socket(AF_INET, SOCK_DGRAM)
-        self.connect((self.dst, 161))
-
-    def handle_read(self):
-
-
-        r = SNMP( self.recv(4096) )
-
-        if self.debug:
-            logging.debug( r.show() )                                                                                                                 
-            logging.debug( hexdump(r) )         
-
-        print self.dst, '[', self.comm, ']',
-        print r[SNMPvarbind].oid.val, '-', r[SNMPvarbind].value.val
-
-        self.handle_close()
-
-    def writable(self):
-        return False
-
-    def handle_connect(self):
-        snmp = SNMP(community=self.comm,PDU=SNMPget(varbindlist=[SNMPvarbind(oid=self.oid)]))
-
-        buf = str( snmp )
-        while buf:
-            bytes = self.send( buf )
-            buf = buf[bytes:]
-
-    def handle_close(self):
-        self.close()
-
-    def handle_expt(self):
-        self.close()
-
-
-def snmpwalk(dst, oid, comm):
-    
-    start_oid = oid
-    #print start_oid
-    print 
-    try:
-        while 1:
-            if start_oid not in oid:
-                break
-
-            #print oid
-            s = socket(AF_INET, SOCK_DGRAM)
-            s.connect((dst, 161))
-
-            snmp = SNMP(community=comm,PDU=SNMPnext(varbindlist=[SNMPvarbind(oid=oid)]))
-
-            buf = str( snmp )
-            while buf:
-                bytes = s.send( buf )
-                buf = buf[bytes:]
-
-            response = SNMP( s.recv(4096) )
-
-            print dst, '[', comm, ']',
-            print response[SNMPvarbind].oid.val, '-', response[SNMPvarbind].value.val
-
-            if ICMP in response:
-                print repr(response)
-                break
-            if response is None:
-                print "No answers"
-                break
-            #print "%-40s: %r" % (r[SNMPvarbind].oid.val,r[SNMPvarbind].value.val)
-            oid = response[SNMPvarbind].oid.val
-            #print oid
-            #print '==============='
-
-            
-    except KeyboardInterrupt:
-        pass
-
-    print '==============='
 
 def main():
 
@@ -143,7 +52,7 @@ def main():
     for destination in destinations:
         for oid_key, oid_val in oids.items():
             print oid_key, oid_val
-            snmpwalk(destination, oid_val, community)
+            ps = snmp_packets(destination, community, oid_val)
 
     oids = {}
     oids["sysName"] = "1.3.6.1.2.1.1.5.0"
@@ -153,7 +62,7 @@ def main():
     for destination in destinations:
         for oid_key, oid_val in oids.items():
             print oid_key, oid_val
-            p = packet( destination, community, oid_val, args.debug)
+            p = snmp_packet( destination, community, oid_val, args.debug)
     
     asyncore.loop()
 

@@ -1,9 +1,10 @@
 #!/usr/bin/env python      
 
-########## ver 0.2
+########## ver 0.3
 #
 # 0.1 first init
 # 0.2 add async - PARTIAL
+# 0.3 asyncore for snmpGET and snmpwalk for snmpNEXT
 #
 
 import argparse, os, logging, re
@@ -19,9 +20,7 @@ class packet(asyncore.file_dispatcher):
     comm = str()
     oid = str()
 
-    response = str()
-
-    def __init__(self, dst, comm, oid, debug = False):
+    def __init__(self, dst, comm, oid, debug):
         asyncore.dispatcher.__init__(self)
 
         self.dst = dst
@@ -29,16 +28,33 @@ class packet(asyncore.file_dispatcher):
         self.oid = oid
         self.debug = debug
 
-        self.snmpwalk()
+        self.create_socket(AF_INET, SOCK_DGRAM)
+        self.connect((self.dst, 161))
 
     def handle_read(self):
-        pass
+
+
+        r = SNMP( self.recv(4096) )
+
+        if self.debug:
+            logging.debug( r.show() )                                                                                                                 
+            logging.debug( hexdump(r) )         
+
+        print self.dst, '[', self.comm, ']',
+        print r[SNMPvarbind].oid.val, '-', r[SNMPvarbind].value.val
+
+        self.handle_close()
 
     def writable(self):
         return False
 
     def handle_connect(self):
-        pass
+        snmp = SNMP(community=self.comm,PDU=SNMPget(varbindlist=[SNMPvarbind(oid=self.oid)]))
+
+        buf = str( snmp )
+        while buf:
+            bytes = self.send( buf )
+            buf = buf[bytes:]
 
     def handle_close(self):
         self.close()
@@ -46,48 +62,49 @@ class packet(asyncore.file_dispatcher):
     def handle_expt(self):
         self.close()
 
-    def snmpwalk(self):
-        
-        start_oid = self.oid
-        #print start_oid
-        print 
-        try:
-            while 1:
-                if start_oid not in self.oid:
-                    break
 
-                #print oid
-                s = socket(AF_INET, SOCK_DGRAM)
-                s.connect((self.dst, 161))
+def snmpwalk(dst, oid, comm):
+    
+    start_oid = oid
+    #print start_oid
+    print 
+    try:
+        while 1:
+            if start_oid not in oid:
+                break
 
-                snmp = SNMP(community=self.comm,PDU=SNMPnext(varbindlist=[SNMPvarbind(oid=self.oid)]))
+            #print oid
+            s = socket(AF_INET, SOCK_DGRAM)
+            s.connect((dst, 161))
 
-                buf = str( snmp )
-                while buf:
-                    bytes = s.send( buf )
-                    buf = buf[bytes:]
+            snmp = SNMP(community=comm,PDU=SNMPnext(varbindlist=[SNMPvarbind(oid=oid)]))
 
-                response = SNMP( s.recv(4096) )
+            buf = str( snmp )
+            while buf:
+                bytes = s.send( buf )
+                buf = buf[bytes:]
 
-                print self.dst, '[', self.comm, ']',
-                print response[SNMPvarbind].oid.val, '-', response[SNMPvarbind].value.val
+            response = SNMP( s.recv(4096) )
 
-                if ICMP in response:
-                    print repr(response)
-                    break
-                if response is None:
-                    print "No answers"
-                    break
-                #print "%-40s: %r" % (r[SNMPvarbind].oid.val,r[SNMPvarbind].value.val)
-                self.oid = response[SNMPvarbind].oid.val
-                #print oid
-                #print '==============='
+            print dst, '[', comm, ']',
+            print response[SNMPvarbind].oid.val, '-', response[SNMPvarbind].value.val
 
-                
-        except KeyboardInterrupt:
-            pass
+            if ICMP in response:
+                print repr(response)
+                break
+            if response is None:
+                print "No answers"
+                break
+            #print "%-40s: %r" % (r[SNMPvarbind].oid.val,r[SNMPvarbind].value.val)
+            oid = response[SNMPvarbind].oid.val
+            #print oid
+            #print '==============='
 
-        print '==============='
+            
+    except KeyboardInterrupt:
+        pass
+
+    print '==============='
 
 def main():
 
@@ -123,14 +140,21 @@ def main():
     oids["ospfIfMetricIpAddress"] = "1.3.6.1.2.1.14.8.1.1"
     oids["ospfIfMetricValue"] = "1.3.6.1.2.1.14.8.1.4"
 
-    oids["sysName"] = "1.3.6.1.2.1.1.5"
+    for destination in destinations:
+        for oid_key, oid_val in oids.items():
+            print oid_key, oid_val
+            snmpwalk(destination, oid_val, community)
+
+    oids = {}
+    oids["sysName"] = "1.3.6.1.2.1.1.5.0"
+    oids["sysDescr"] = "1.3.6.1.2.1.1.1.0"
+    oids["sysObjectID"] = "1.3.6.1.2.1.1.2.0"
 
     for destination in destinations:
         for oid_key, oid_val in oids.items():
             print oid_key, oid_val
-            # snmpwalk(destination, oid_val, community)
-            p = packet( destination, community, oid_val )
-
+            p = packet( destination, community, oid_val, args.debug)
+    
     asyncore.loop()
 
 

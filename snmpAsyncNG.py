@@ -1,12 +1,13 @@
 #!/usr/bin/env python      
 
-########## ver 0.32
+########## ver 0.4
 #
 # 0.1 first init
 # 0.2 add async - PARTIAL
 # 0.3 asyncore for snmpGET and snmpwalk for snmpNEXT
 # 0.31 create obj for walk
 # 0.32 mv objs to lib
+# 0.4 perform oid translation
 #
 
 import argparse, os, logging, re
@@ -49,10 +50,12 @@ def main():
     oids["ospfIfMetricIpAddress"] = "1.3.6.1.2.1.14.8.1.1"
     oids["ospfIfMetricValue"] = "1.3.6.1.2.1.14.8.1.4"
 
+    oids["ospfIfMetricEntry"] = "1.3.6.1.2.1.14.8.1"
+
     for destination in destinations:
         for oid_key, oid_val in oids.items():
             print oid_key, oid_val
-            ps = snmp_packets(destination, community, oid_val)
+            ps = snmp_packets( destination, community, oid_key, oid_val, args.debug )
 
     oids = {}
     oids["sysName"] = "1.3.6.1.2.1.1.5.0"
@@ -62,7 +65,7 @@ def main():
     for destination in destinations:
         for oid_key, oid_val in oids.items():
             print oid_key, oid_val
-            p = snmp_packet( destination, community, oid_val, args.debug)
+            p = snmp_packet( destination, community, oid_key, oid_val, args.debug )
     
     asyncore.loop()
 

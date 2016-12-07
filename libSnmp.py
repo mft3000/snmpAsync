@@ -1,8 +1,10 @@
 #!/usr/bin/env python      
 
-########## ver 0.1
+########## ver 0.2
 #
 # 0.1 first init
+# 0.2 perform oid translation
+#
 
 from scapy.all import SNMP, SNMPnext, SNMPvarbind, ICMP, SNMPget
 
@@ -16,13 +18,15 @@ class snmp_packet(asyncore.file_dispatcher):
     comm = str()
     oid = str()
 
-    def __init__(self, dst, comm, oid, debug = False):
+    def __init__(self, dst, comm, oid_key, oid_val, debug = False, translate = True):
         asyncore.dispatcher.__init__(self)
 
         self.dst = dst
         self.comm = comm
-        self.oid = oid
+        self.oid = oid_val
+        self.oid_key = oid_key
         self.debug = debug
+        self.translate = translate
 
         self.create_socket(AF_INET, SOCK_DGRAM)
         self.connect((self.dst, 161))
@@ -30,14 +34,18 @@ class snmp_packet(asyncore.file_dispatcher):
     def handle_read(self):
 
 
-        r = SNMP( self.recv(4096) )
+        response = SNMP( self.recv(4096) )
 
         if self.debug:
-            logging.debug( r.show() )                                                                                                                 
-            logging.debug( hexdump(r) )         
+            logging.debug( response.show() )                                                                                                                 
+            logging.debug( hexdump(response) )         
 
         print self.dst, '[', self.comm, ']',
-        print r[SNMPvarbind].oid.val, '-', r[SNMPvarbind].value.val
+        if self.translate:
+            print response[SNMPvarbind].oid.val.replace(self.oid, self.oid_key),
+        else:
+            print response[SNMPvarbind].oid.val, 
+        print '-', response[SNMPvarbind].value.val
 
         self.handle_close()
 
@@ -60,12 +68,14 @@ class snmp_packet(asyncore.file_dispatcher):
 
 class snmp_packets(object):
 
-    def __init__(self, dst, comm, oid, debug = False):
+    def __init__(self, dst, comm, oid_key, oid_val, debug = False, translate = True):
 
         self.dst = dst
         self.comm = comm
-        self.oid = oid
+        self.oid = oid_val
+        self.oid_key = oid_key
         self.debug = debug
+        self.translate = translate
 
         self.snmpwalk()
 
@@ -90,8 +100,16 @@ class snmp_packets(object):
 
                 response = SNMP( s.recv(4096) )
 
+                self.oid = response[SNMPvarbind].oid.val
+                if start_oid not in self.oid:
+                    break
+
                 print self.dst, '[', self.comm, ']',
-                print response[SNMPvarbind].oid.val, '-', response[SNMPvarbind].value.val
+                if self.translate:
+                    print response[SNMPvarbind].oid.val.replace(start_oid, self.oid_key), 
+                else:
+                    print response[SNMPvarbind].oid.val, 
+                print '-', response[SNMPvarbind].value.val
 
                 if ICMP in response:
                     print repr(response)
@@ -100,9 +118,6 @@ class snmp_packets(object):
                     print "No answers"
                     break
                 #print "%-40s: %r" % (r[SNMPvarbind].oid.val,r[SNMPvarbind].value.val)
-                self.oid = response[SNMPvarbind].oid.val
-                if start_oid not in self.oid:
-                    break
                 #print oid
                 #print '==============='
 

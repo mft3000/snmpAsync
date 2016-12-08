@@ -1,6 +1,6 @@
 #!/usr/bin/env python      
 
-########## ver 0.4
+########## ver 0.41
 #
 # 0.1 first init
 # 0.2 add async - PARTIAL
@@ -8,6 +8,7 @@
 # 0.31 create obj for walk
 # 0.32 mv objs to lib
 # 0.4 perform oid translation
+# 0.41 minor changes
 #
 
 import argparse, os, logging, re
@@ -17,8 +18,6 @@ from libSnmp import snmp_packets, snmp_packet
 import asyncore
 
 def main():
-
-    #load_mib("mib/*")
 
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('-r','--router', required=True, nargs='+')

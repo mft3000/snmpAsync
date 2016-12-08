@@ -1,0 +1,14 @@
+#!/bin/sh
+
+wget ftp://ftp.cisco.com/pub/mibs/v2/IANAifType-MIB.my
+wget ftp://ftp.cisco.com/pub/mibs/v2/IF-MIB.my
+wget ftp://ftp.cisco.com/pub/mibs/v1/OSPF-MIB-V1SMI.my
+wget ftp://ftp.cisco.com/pub/mibs/v2/OSPF-MIB.my
+wget http://158.195.16.31/mib/RFC-1212.my
+wget http://158.195.16.31/mib/RFC1155-SMI.my
+wget http://158.195.16.31/mib/RFC1213-MIB.my
+wget ftp://ftp.cisco.com/pub/mibs/v2/SNMPv2-CONF.my
+wget ftp://ftp.cisco.com/pub/mibs/v2/SNMPv2-MIB.my
+wget ftp://ftp.cisco.com/pub/mibs/v1/SNMPv2-SMI-V1SMI.my
+wget ftp://ftp.cisco.com/pub/mibs/v2/SNMPv2-SMI.my
+wget ftp://ftp.cisco.com/pub/mibs/v2/SNMPv2-TC.my

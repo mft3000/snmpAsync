@@ -1,16 +1,25 @@
-#!/usr/bin/env python      
+#!/usr/bin/env python
 
-########## ver 0.2
+########## ver 0.21
 #
 # 0.1 first init
 # 0.2 perform oid translation
+# 0.21 add scapy mib translation, fix logging debug packet
 #
 
-from scapy.all import SNMP, SNMPnext, SNMPvarbind, ICMP, SNMPget
+from scapy.all import SNMP, SNMPnext, SNMPvarbind, ICMP, SNMPget, load_mib, hexdump
 
 from socket import socket, AF_INET, SOCK_DGRAM
 
 import asyncore
+
+# ++++++++++++++++++++  
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+# --------------------  
+
+load_mib("mib/*")
 
 class snmp_packet(asyncore.file_dispatcher):
 
@@ -33,16 +42,16 @@ class snmp_packet(asyncore.file_dispatcher):
 
     def handle_read(self):
 
-
         response = SNMP( self.recv(4096) )
 
         if self.debug:
             logging.debug( response.show() )                                                                                                                 
-            logging.debug( hexdump(response) )         
+            logging.debug( hexdump(response) )
 
         print self.dst, '[', self.comm, ']',
         if self.translate:
-            print response[SNMPvarbind].oid.val.replace(self.oid, self.oid_key),
+            # print response[SNMPvarbind].oid.val.replace(self.oid, self.oid_key), 
+            print response[SNMPvarbind].oid.__oidname__(),
         else:
             print response[SNMPvarbind].oid.val, 
         print '-', response[SNMPvarbind].value.val
@@ -100,13 +109,18 @@ class snmp_packets(object):
 
                 response = SNMP( s.recv(4096) )
 
+                if self.debug:
+                    logging.debug( response.show() )                                                                                                                 
+                    logging.debug( hexdump(response) )  
+
                 self.oid = response[SNMPvarbind].oid.val
                 if start_oid not in self.oid:
                     break
 
                 print self.dst, '[', self.comm, ']',
                 if self.translate:
-                    print response[SNMPvarbind].oid.val.replace(start_oid, self.oid_key), 
+                    # print response[SNMPvarbind].oid.val.replace(start_oid, self.oid_key), 
+                    print response[SNMPvarbind].oid.__oidname__(),
                 else:
                     print response[SNMPvarbind].oid.val, 
                 print '-', response[SNMPvarbind].value.val

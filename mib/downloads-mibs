@@ -12,3 +12,7 @@ wget ftp://ftp.cisco.com/pub/mibs/v2/SNMPv2-MIB.my
 wget ftp://ftp.cisco.com/pub/mibs/v1/SNMPv2-SMI-V1SMI.my
 wget ftp://ftp.cisco.com/pub/mibs/v2/SNMPv2-SMI.my
 wget ftp://ftp.cisco.com/pub/mibs/v2/SNMPv2-TC.my
+wget ftp://ftp.cisco.com/pub/mibs/v2/CISCO-PRODUCTS-MIB.my
+wget ftp://ftp.cisco.com/pub/mibs/v2/CISCO-SMI.my
+wget ftp://ftp.cisco.com/pub/mibs/v1/CISCO-PRODUCTS-MIB-V1SMI.my
+wget ftp://ftp.cisco.com/pub/mibs/v1/CISCO-SMI-V1SMI.my

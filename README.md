@@ -1,7 +1,7 @@
 SNMP polling with Scapy and Async
 =====
 
-perform snmpGet (with Async) and snmpWalk with scapy.
+perform snmpGet (with Async) and snmpWalk, with scapy.
 
 snmp results will be turned in json format -> sql -> list / texttable / json (for further handle)
 
@@ -24,6 +24,31 @@ NEXT STEPS:
 - help ![igpDraw](https://github.com/mft3000/igpDraw.git) to retrieve ospf data for graph
 
 
+snmp and Async
+===
+
+snmpGET w or w/o Async from ```tcpdump port snmp``` point of view:
+
+- snmpGet w/o Async
+
+```
+20:35:39.150716 IP 10.64.0.9.65081 > 10.64.0.250.snmp:  GetRequest(25)  system.sysName.0
+20:35:39.152709 IP 10.64.0.250.snmp > 10.64.0.9.65081:  GetResponse(44)  system.sysName.0="SW-Nuovo"
+20:35:39.153448 IP 10.64.0.9.60076 > 10.64.0.250.snmp:  GetRequest(25)  system.sysObjectID.0
+20:35:39.155574 IP 10.64.0.250.snmp > 10.64.0.9.60076:  GetResponse(34)  system.sysObjectID.0=E:cisco.1.563
+20:35:39.157933 IP 10.64.0.9.57603 > 10.64.0.250.snmp:  GetRequest(25)  system.sysDescr.0
+20:35:39.155574 IP 10.64.0.250.snmp > 10.64.0.9.57603:  GetResponse(280)  system.sysDescr.0=43_69_73_63_6f_20_49_4f_53_20_53_6f_66_74_77_61_72_65_2c_20_43_33_35_36_30_20_53_6f_66_74_77_61_72_65_20_28_43_33_35_36_30_2d_49_50_53_45_52_56_49_43_45_53_4b_39_2d_4d_29_2c_20_56_65_72_73_69_6f_6e_20_31_32_2e_32_28_35_33_29_53_45_32_2c_20_52_45_4c_45_41_53_45_20_53_4f_46_54_57_41_52_45_20_28_66_63_33_29_0d_0a_54_65_63_68_6e_69_63_61_6c_20_53_75_70_70_6f_72_74_3a_20_68_74_74_70_3a_2f_2f_77_77_77_2e_63_69_73_63_6f_2e_63_6f_6d_2f_74_65_63_68_73_75_70_70_6f_72_74_0d_0a_43_6f_70_79_72_69_67_68_74_20_28_63_29_20_31_39_38_36_2d_32_30_31_30_20_62_79_20_43_69_73_63_6f_20_53_79_73_74_65_6d_73_2c_20_49_6e_63_2e_0d_0a_43_6f_6d_70_69_6c_65_64_20_57_65_64_20_32_31_2d_41_70_72_2d_31_30_20_30_35_3a_33_33_20_62_79_20_70_72_6f_64_5f_72_65_6c_5f_74_65_61_6d
+```
+- snmpGet w Async
+
+```
+20:24:30.184125 IP 10.64.0.9.61054 > 10.64.0.250.snmp:  GetRequest(25)  system.sysName.0
+20:24:30.186049 IP 10.64.0.9.55234 > 10.64.0.250.snmp:  GetRequest(25)  system.sysObjectID.0
+20:24:30.187833 IP 10.64.0.9.56350 > 10.64.0.250.snmp:  GetRequest(25)  system.sysDescr.0
+20:24:30.188658 IP 10.64.0.250.snmp > 10.64.0.9.61054:  GetResponse(44)  system.sysName.0="SW-Nuovo"
+20:24:30.191639 IP 10.64.0.250.snmp > 10.64.0.9.55234:  GetResponse(34)  system.sysObjectID.0=E:cisco.1.563
+20:24:30.191930 IP 10.64.0.250.snmp > 10.64.0.9.56350:  GetResponse(280)  system.sysDescr.0=43_69_73_63_6f_20_49_4f_53_20_53_6f_66_74_77_61_72_65_2c_20_43_33_35_36_30_20_53_6f_66_74_77_61_72_65_20_28_43_33_35_36_30_2d_49_50_53_45_52_56_49_43_45_53_4b_39_2d_4d_29_2c_20_56_65_72_73_69_6f_6e_20_31_32_2e_32_28_35_33_29_53_45_32_2c_20_52_45_4c_45_41_53_45_20_53_4f_46_54_57_41_52_45_20_28_66_63_33_29_0d_0a_54_65_63_68_6e_69_63_61_6c_20_53_75_70_70_6f_72_74_3a_20_68_74_74_70_3a_2f_2f_77_77_77_2e_63_69_73_63_6f_2e_63_6f_6d_2f_74_65_63_68_73_75_70_70_6f_72_74_0d_0a_43_6f_70_79_72_69_67_68_74_20_28_63_29_20_31_39_38_36_2d_32_30_31_30_20_62_79_20_43_69_73_63_6f_20_53_79_73_74_65_6d_73_2c_20_49_6e_63_2e_0d_0a_43_6f_6d_70_69_6c_65_64_20_57_65_64_20_32_31_2d_41_70_72_2d_31_30_20_30_35_3a_33_33_20_62_79_20_70_72_6f_64_5f_72_65_6c_5f_74_65_61_6d
+```
 
 demo
 ====
@@ -1362,45 +1387,10 @@ INFO:root:loading row to sql...DONE
 ospfIfMetricEntry 1.3.6.1.2.1.14.8.1
 
 10.64.0.250 [ public ] ospfIfMetricIpAddress.10.64.0.250.0.0 - 10.64.0.250
-10.64.0.250 [ public ] ospfIfMetricIpAddress.10.64.0.250.0.4 - 10.64.0.250
-10.64.0.250 [ public ] ospfIfMetricIpAddress.10.64.0.250.0.8 - 10.64.0.250
-10.64.0.250 [ public ] ospfIfMetricIpAddress.10.64.0.250.0.12 - 10.64.0.250
-10.64.0.250 [ public ] ospfIfMetricIpAddress.10.64.0.250.0.16 - 10.64.0.250
-10.64.0.250 [ public ] ospfIfMetricIpAddress.10.64.0.250.0.20 - 10.64.0.250
-10.64.0.250 [ public ] ospfIfMetricIpAddress.10.64.0.250.0.24 - 10.64.0.250
-10.64.0.250 [ public ] ospfIfMetricIpAddress.10.64.0.250.0.28 - 10.64.0.250
 10.64.0.250 [ public ] ospfIfMetricAddressLessIf.10.64.0.250.0.0 - 0
-10.64.0.250 [ public ] ospfIfMetricAddressLessIf.10.64.0.250.0.4 - 0
-10.64.0.250 [ public ] ospfIfMetricAddressLessIf.10.64.0.250.0.8 - 0
-10.64.0.250 [ public ] ospfIfMetricAddressLessIf.10.64.0.250.0.12 - 0
-10.64.0.250 [ public ] ospfIfMetricAddressLessIf.10.64.0.250.0.16 - 0
-10.64.0.250 [ public ] ospfIfMetricAddressLessIf.10.64.0.250.0.20 - 0
-10.64.0.250 [ public ] ospfIfMetricAddressLessIf.10.64.0.250.0.24 - 0
-10.64.0.250 [ public ] ospfIfMetricAddressLessIf.10.64.0.250.0.28 - 0
 10.64.0.250 [ public ] ospfIfMetricTOS.10.64.0.250.0.0 - 0
-10.64.0.250 [ public ] ospfIfMetricTOS.10.64.0.250.0.4 - 4
-10.64.0.250 [ public ] ospfIfMetricTOS.10.64.0.250.0.8 - 8
-10.64.0.250 [ public ] ospfIfMetricTOS.10.64.0.250.0.12 - 12
-10.64.0.250 [ public ] ospfIfMetricTOS.10.64.0.250.0.16 - 16
-10.64.0.250 [ public ] ospfIfMetricTOS.10.64.0.250.0.20 - 20
-10.64.0.250 [ public ] ospfIfMetricTOS.10.64.0.250.0.24 - 24
-10.64.0.250 [ public ] ospfIfMetricTOS.10.64.0.250.0.28 - 28
 10.64.0.250 [ public ] ospfIfMetricValue.10.64.0.250.0.0 - 124
-10.64.0.250 [ public ] ospfIfMetricValue.10.64.0.250.0.4 - 65535
-10.64.0.250 [ public ] ospfIfMetricValue.10.64.0.250.0.8 - 65535
-10.64.0.250 [ public ] ospfIfMetricValue.10.64.0.250.0.12 - 65535
-10.64.0.250 [ public ] ospfIfMetricValue.10.64.0.250.0.16 - 65535
-10.64.0.250 [ public ] ospfIfMetricValue.10.64.0.250.0.20 - 65535
-10.64.0.250 [ public ] ospfIfMetricValue.10.64.0.250.0.24 - 65535
-10.64.0.250 [ public ] ospfIfMetricValue.10.64.0.250.0.28 - 65535
 10.64.0.250 [ public ] ospfIfMetricStatus.10.64.0.250.0.0 - 1
-10.64.0.250 [ public ] ospfIfMetricStatus.10.64.0.250.0.4 - 1
-10.64.0.250 [ public ] ospfIfMetricStatus.10.64.0.250.0.8 - 1
-10.64.0.250 [ public ] ospfIfMetricStatus.10.64.0.250.0.12 - 1
-10.64.0.250 [ public ] ospfIfMetricStatus.10.64.0.250.0.16 - 1
-10.64.0.250 [ public ] ospfIfMetricStatus.10.64.0.250.0.20 - 1
-10.64.0.250 [ public ] ospfIfMetricStatus.10.64.0.250.0.24 - 1
-10.64.0.250 [ public ] ospfIfMetricStatus.10.64.0.250.0.28 - 1
 {
     "10.64.0.250.0.0": {
         "ospfIfMetricAddressLessIf": 0,
@@ -1408,84 +1398,15 @@ ospfIfMetricEntry 1.3.6.1.2.1.14.8.1
         "ospfIfMetricStatus": 1,
         "ospfIfMetricTOS": 0,
         "ospfIfMetricValue": 124
-    },
-    "10.64.0.250.0.12": {
-        "ospfIfMetricAddressLessIf": 0,
-        "ospfIfMetricIpAddress": "10.64.0.250",
-        "ospfIfMetricStatus": 1,
-        "ospfIfMetricTOS": 12,
-        "ospfIfMetricValue": 65535
-    },
-    "10.64.0.250.0.16": {
-        "ospfIfMetricAddressLessIf": 0,
-        "ospfIfMetricIpAddress": "10.64.0.250",
-        "ospfIfMetricStatus": 1,
-        "ospfIfMetricTOS": 16,
-        "ospfIfMetricValue": 65535
-    },
-    "10.64.0.250.0.20": {
-        "ospfIfMetricAddressLessIf": 0,
-        "ospfIfMetricIpAddress": "10.64.0.250",
-        "ospfIfMetricStatus": 1,
-        "ospfIfMetricTOS": 20,
-        "ospfIfMetricValue": 65535
-    },
-    "10.64.0.250.0.24": {
-        "ospfIfMetricAddressLessIf": 0,
-        "ospfIfMetricIpAddress": "10.64.0.250",
-        "ospfIfMetricStatus": 1,
-        "ospfIfMetricTOS": 24,
-        "ospfIfMetricValue": 65535
-    },
-    "10.64.0.250.0.28": {
-        "ospfIfMetricAddressLessIf": 0,
-        "ospfIfMetricIpAddress": "10.64.0.250",
-        "ospfIfMetricStatus": 1,
-        "ospfIfMetricTOS": 28,
-        "ospfIfMetricValue": 65535
-    },
-    "10.64.0.250.0.4": {
-        "ospfIfMetricAddressLessIf": 0,
-        "ospfIfMetricIpAddress": "10.64.0.250",
-        "ospfIfMetricStatus": 1,
-        "ospfIfMetricTOS": 4,
-        "ospfIfMetricValue": 65535
-    },
-    "10.64.0.250.0.8": {
-        "ospfIfMetricAddressLessIf": 0,
-        "ospfIfMetricIpAddress": "10.64.0.250",
-        "ospfIfMetricStatus": 1,
-        "ospfIfMetricTOS": 8,
-        "ospfIfMetricValue": 65535
     }
 }
-INFO:root:loading row to sql...DONE
-INFO:root:loading row to sql...DONE
-INFO:root:loading row to sql...DONE
-INFO:root:loading row to sql...DONE
-INFO:root:loading row to sql...DONE
-INFO:root:loading row to sql...DONE
-INFO:root:loading row to sql...DONE
 INFO:root:loading row to sql...DONE
 +-------------------+-----------------------+------------------+-----------------+--------------------+---------------------------+
 | ospfIfMetricValue | ospfIfMetricIpAddress |        -         | ospfIfMetricTOS | ospfIfMetricStatus | ospfIfMetricAddressLessIf |
 +===================+=======================+==================+=================+====================+===========================+
-| 65535             | 10.64.0.250           | 10.64.0.250.0.4  | 4               | 1                  | 0                         |
-+-------------------+-----------------------+------------------+-----------------+--------------------+---------------------------+
 | 124               | 10.64.0.250           | 10.64.0.250.0.0  | 0               | 1                  | 0                         |
 +-------------------+-----------------------+------------------+-----------------+--------------------+---------------------------+
-| 65535             | 10.64.0.250           | 10.64.0.250.0.8  | 8               | 1                  | 0                         |
-+-------------------+-----------------------+------------------+-----------------+--------------------+---------------------------+
-| 65535             | 10.64.0.250           | 10.64.0.250.0.28 | 28              | 1                  | 0                         |
-+-------------------+-----------------------+------------------+-----------------+--------------------+---------------------------+
-| 65535             | 10.64.0.250           | 10.64.0.250.0.12 | 12              | 1                  | 0                         |
-+-------------------+-----------------------+------------------+-----------------+--------------------+---------------------------+
-| 65535             | 10.64.0.250           | 10.64.0.250.0.24 | 24              | 1                  | 0                         |
-+-------------------+-----------------------+------------------+-----------------+--------------------+---------------------------+
-| 65535             | 10.64.0.250           | 10.64.0.250.0.16 | 16              | 1                  | 0                         |
-+-------------------+-----------------------+------------------+-----------------+--------------------+---------------------------+
-| 65535             | 10.64.0.250           | 10.64.0.250.0.20 | 20              | 1                  | 0                         |
-+-------------------+-----------------------+------------------+-----------------+--------------------+---------------------------+
+
 ===============
 ospfNbrEntry 1.3.6.1.2.1.14.10.1
 

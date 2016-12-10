@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
-########## ver 0.4
+########## ver 0.41
 #
 # 0.1 first init
 # 0.2 perform oid translation
 # 0.21 add scapy mib translation, fix logging debug packet
 # 0.3 translate sysObjectID to name, add info to table
 # 0.4 print sql table (list, json, textable)
+# 0.41 add comments
 #
 
 from scapy.all import SNMP, SNMPnext, SNMPvarbind, ICMP, SNMPget, load_mib, hexdump

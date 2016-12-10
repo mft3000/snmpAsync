@@ -46,6 +46,9 @@ logger = logging.getLogger(__name__)
 load_mib("mib/*")
 
 class snmp_packet(asyncore.file_dispatcher):
+    '''
+    snmpGET query
+    '''
 
     dst = str()
     comm = str()
@@ -105,6 +108,9 @@ class snmp_packet(asyncore.file_dispatcher):
         self.close()
 
 class snmp_packets(object):
+    '''
+    snmpNEXT query
+    '''
 
     def __init__(self, dst, comm, oid_key, oid_val, debug = False, translate = True):
 

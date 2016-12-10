@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 
-########## ver 0.2
+########## ver 0.31
 #
 # 0.1 first init
 # 0.2 add print_table()
 # 0.3 add sql, snmp to json, json to sql, sql to json
+# 0.31 fix bug in multiple obj init
 #
 
 import collections, json
@@ -22,18 +23,18 @@ logger = logging.getLogger(__name__)
 
 class table(object):
 
-	_field_list = []
-	_keys_list = []
-
-	tab = tree()
-
-	dt = Texttable(max_width=150)
-
 	def __init__(self, name = ''):
 		
 		self.name = name
+		
+		self._field_list = []
+		self._keys_list = []
 
-		self.s = sql('name')
+		self.tab = tree()
+
+		self.dt = Texttable(max_width=150)
+
+		self.s = sql(self.name)
 		self.s.connect()
 
 	def add_fields_name(self, field):

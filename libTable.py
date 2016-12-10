@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 
-########## ver 0.31
+########## ver 0.42
 #
 # 0.1 first init
 # 0.2 add print_table()
 # 0.3 add sql, snmp to json, json to sql, sql to json
 # 0.31 fix bug in multiple obj init
+# 0.42 adjust sql tablet reset
 #
 
 import collections, json
@@ -34,8 +35,10 @@ class table(object):
 
 		self.dt = Texttable(max_width=150)
 
-		self.s = sql(self.name)
+		self.s = sql('db')
 		self.s.connect()
+
+		self.erase_table(self.name)
 
 	def add_fields_name(self, field):
 
@@ -118,9 +121,9 @@ class table(object):
 		elif print_mode == 'json':
 			print self.s.select_table_as_json(self.name)
 
-	def erase_table(self):
+	def erase_table(self, table_name):
 
-		self.s.drop_table(self.name)
+		self.s.drop_table(table_name)
 
 def dict_factory(cursor, row):
     js = tree()

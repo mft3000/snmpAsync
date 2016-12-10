@@ -1,20 +1,41 @@
 #!/usr/bin/env python
 
-########## ver 0.3
+########## ver 0.4
 #
 # 0.1 first init
 # 0.2 perform oid translation
 # 0.21 add scapy mib translation, fix logging debug packet
 # 0.3 translate sysObjectID to name, add info to table
+# 0.4 print sql table (list, json, textable)
 #
 
 from scapy.all import SNMP, SNMPnext, SNMPvarbind, ICMP, SNMPget, load_mib, hexdump
 
 from socket import socket, AF_INET, SOCK_DGRAM
 
-import asyncore
+import asyncore, binascii
 
 from libTable import table
+
+def convertMac(octet):
+    """
+    This Function converts a binary mac address to a hexadecimal string representation
+    """
+    mac = [binascii.b2a_hex(x) for x in list(octet)]
+    return ":".join(mac)
+ 
+def convertIP(octet):
+    ip = [str(int(binascii.b2a_hex(x),16)) for x in list(octet)]
+    return ".".join(ip)
+
+def normalize_snmp_result(snmp_field, snmp_value):
+
+    if not snmp_field:
+        return ''
+    elif 'ifPhysAddress' in snmp_field:
+        return convertMac(snmp_value)
+    else:
+        return snmp_value
 
 # ++++++++++++++++++++  
 import logging
@@ -102,7 +123,7 @@ class snmp_packets(object):
         #print start_oid
         print 
         try:
-            t = table(self.oid_key)
+            t = table(self.oid_key) 
             while 1:
 
                 #print oid
@@ -132,12 +153,21 @@ class snmp_packets(object):
                     print response[SNMPvarbind].oid.__oidname__(),
                 else:
                     print response[SNMPvarbind].oid.val, 
-                print '-', response[SNMPvarbind].value.val
+                print '-', 
+                # print type(response[SNMPvarbind].value.val),
 
                 field = response[SNMPvarbind].oid.__oidname__()
+
+                #31.223.255.13 [ NordEx7 ] ospfAreaStatus.0.0.0.0 - 1
+                #                          ^^^^^^^^^^^^^^ ^^^^^^^   ^
+                #                                v           k     res
+
                 v = t.add_fields_name(field)
                 k = t.add_keys_name(field)
-                t.add_values(k, v, response[SNMPvarbind].value.val)
+                res = normalize_snmp_result(v, response[SNMPvarbind].value.val)
+                t.add_values(k, v, res)
+
+                print res
 
                 if ICMP in response:
                     print repr(response)
@@ -148,13 +178,71 @@ class snmp_packets(object):
                 #print "%-40s: %r" % (r[SNMPvarbind].oid.val,r[SNMPvarbind].value.val)
                 #print oid
                 #print '==============='
-
                 
         except KeyboardInterrupt:
             pass
 
-        # print t.show_fileds_list()
+        # print t.show_fields_list()
+
+        # ['ospfSpfRuns', 'ospfAsBdrRtrCount', 'ospfAreaId', 'ospfAreaLsaCount', 'ospfAuthType', 'ospfAreaStatus', 'ospfAreaLsaCksumSum', 'ospfImportAsExtern', 'ospfAreaSummary', 'ospfAreaBdrRtrCount']
+        
         # print t.show_keys_list()
-        # print t.show_values_json()
-        t.print_table()
+
+        # ['0.0.0.0']
+
+        print t.show_values_json()
+
+        # {
+        #     "0.0.0.0": {
+        #         "ospfAreaBdrRtrCount": 2,
+        #         "ospfAreaId": "0.0.0.0",
+        #         "ospfAreaLsaCksumSum": 13869839,
+        #         "ospfAreaLsaCount": 437,
+        #         "ospfAreaStatus": 1,
+        #         "ospfAreaSummary": 2,
+        #         "ospfAsBdrRtrCount": 1,
+        #         "ospfAuthType": 0,
+        #         "ospfImportAsExtern": 1,
+        #         "ospfSpfRuns": 30842
+        #     }
+        # }
+
+        t.populate_sql_table()
+
+        # INFO:root:loading row to sql...DONE
+ 
+        # t.print_sql_table('list')
+
+        # [ ('ospfSpfRuns', 'ospfAsBdrRtrCount', 'ospfAreaId', 'ospfAreaLsaCount', '-', 'ospfAuthType', 'ospfAreaStatus', 'ospfAreaLsaCksumSum', 'ospfImportAsExtern', 'ospfAreaSummary', 'ospfAreaBdrRtrCount'), 
+        # (u'30842', u'1', u'0.0.0.0', u'437', u'0.0.0.0', u'0', u'1', u'13869839', u'1', u'2', u'2') ]
+
+        t.print_sql_table('texttable')
+
+        # +------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+
+        # | ospfSpfRun | ospfAsBdrR | ospfAreaId | ospfAreaLs |     -      | ospfAuthTy | ospfAreaSt | ospfAreaLs | ospfImport | ospfAreaSu | ospfAreaBd |
+        # |     s      |  trCount   |            |   aCount   |            |     pe     |    atus    | aCksumSum  |  AsExtern  |   mmary    | rRtrCount  |
+        # +============+============+============+============+============+============+============+============+============+============+============+
+        # | 30842      | 1          | 0.0.0.0    | 437        | 0.0.0.0    | 0          | 1          | 13869839   | 1          | 2          | 2          |
+        # +------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+
+        
+        # t.print_sql_table('json')
+
+        # [
+        #     {
+        #         "0.0.0.0": {
+        #             "ospfAreaBdrRtrCount": "2",
+        #             "ospfAreaId": "0.0.0.0",
+        #             "ospfAreaLsaCksumSum": "13869839",
+        #             "ospfAreaLsaCount": "437",
+        #             "ospfAreaStatus": "1",
+        #             "ospfAreaSummary": "2",
+        #             "ospfAsBdrRtrCount": "1",
+        #             "ospfAuthType": "0",
+        #             "ospfImportAsExtern": "1",
+        #             "ospfSpfRuns": "30842"
+        #         }
+        #     }
+        # ]
+
         print '==============='
+        t.erase_table()

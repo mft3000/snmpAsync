@@ -1,6 +1,6 @@
 #!/usr/bin/env python      
 
-########## ver 0.41
+########## ver 0.42
 #
 # 0.1 first init
 # 0.2 add async - PARTIAL
@@ -9,6 +9,7 @@
 # 0.32 mv objs to lib
 # 0.4 perform oid translation
 # 0.41 minor changes
+# 0.42 minor changes BIS
 #
 
 import argparse, os, logging, re
@@ -39,17 +40,22 @@ def main():
     print
 
     oids = {}
-    oids["ifIndex"] = "1.3.6.1.2.1.2.2.1.1"
-    oids["ifDescr"] = "1.3.6.1.2.1.2.2.1.2"
+    oids["ifEntry"] = "1.3.6.1.2.1.2.2.1"
+    # oids["ifIndex"] = "1.3.6.1.2.1.2.2.1.1"
+    # oids["ifDescr"] = "1.3.6.1.2.1.2.2.1.2"
     
-    oids["ipAdEntAddr"] = "1.3.6.1.2.1.4.20.1.1"
-    oids["ipAdEntIfIndex"] = "1.3.6.1.2.1.4.20.1.2"
-    oids["ipAdEntNetMask"] = "1.3.6.1.2.1.4.20.1.3"
-
-    oids["ospfIfMetricIpAddress"] = "1.3.6.1.2.1.14.8.1.1"
-    oids["ospfIfMetricValue"] = "1.3.6.1.2.1.14.8.1.4"
+    oids["ipAddrTable"] = "1.3.6.1.2.1.4.20"
+    # oids["ipAdEntAddr"] = "1.3.6.1.2.1.4.20.1.1"
+    # oids["ipAdEntIfIndex"] = "1.3.6.1.2.1.4.20.1.2"
+    # oids["ipAdEntNetMask"] = "1.3.6.1.2.1.4.20.1.3"
 
     oids["ospfIfMetricEntry"] = "1.3.6.1.2.1.14.8.1"
+    # oids["ospfIfMetricIpAddress"] = "1.3.6.1.2.1.14.8.1.1"
+    # oids["ospfIfMetricValue"] = "1.3.6.1.2.1.14.8.1.4"
+
+    oids["ospfAreaEntry"] = "1.3.6.1.2.1.14.2.1"
+
+    oids["ospfNbrEntry"] = "1.3.6.1.2.1.14.10.1"
 
     for destination in destinations:
         for oid_key, oid_val in oids.items():
@@ -67,7 +73,6 @@ def main():
             p = snmp_packet( destination, community, oid_key, oid_val, args.debug )
     
     asyncore.loop()
-
 
 if __name__ == '__main__':
   main()
